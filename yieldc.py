@@ -1,6 +1,5 @@
 #Requires installing python3-matplotlib,python3-tk, and python3
 #Download xml file from treasury yield
-#Parse xml into a dictionary
 #Build Yield curves and display them in matplotlib
 
 import requests

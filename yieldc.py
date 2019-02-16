@@ -7,6 +7,8 @@ import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
 import numpy as np
 import datetime as dt
+import os
+from scipy.interpolate import make_interp_spline, BSpline
 
 def loadxml():
 
@@ -34,10 +36,21 @@ def parseXML(xmlfile):
     ns = {'rootns':'http://www.w3.org/2005/Atom','properties':'http://schemas.microsoft.com/ado/2007/08/dataservices/metadata',
             'rates':'http://schemas.microsoft.com/ado/2007/08/dataservices'}
 
+    #Delete xml file if it exists
+    try:
+        os.remove('~/DailyTreasuryYieldCurveRateData.xml')
+    except OSError:
+        pass
+    try:
+        os.remove('~/Documents/mypython/YieldCurve/DailyTreasuryYieldCurveRateData.xml')
+    except OSError:
+        pass
+
     #Create  values correspond to xmltags for plotting using matplot
     rate = []
     xlabels = ['1M','2M','3M','1YR','2YR','3YR','5YR','7YR','10YR','20YR','30YR']
     tag = [1,2,3,4,5,6,7,8,9,10,11,12]
+    smoothtag = np.linspace(1,12)
     fig, ax = plt.subplots()
     ax.set(xlabel='Time to Maturity', ylabel='Interest',title='Yield Curve')
     ax.grid
@@ -79,7 +92,9 @@ def parseXML(xmlfile):
                         rate.append(float(child.text))
                     if child.tag[55:] == 'BC_30YEAR':
                         rate.append(float(child.text))
-                        ax.plot(tag,rate,ms=5,label=newdate)
+                        smr = make_interp_spline(tag,rate)
+                        rate_smooth = smr(smoothtag)
+                        ax.plot(smoothtag,rate_smooth,ms=5,label=newdate)
                         rate.clear()
     ax.grid()
     ax.legend()

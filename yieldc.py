@@ -48,26 +48,27 @@ def parseXML(xmlfile):
 
     #Create  values correspond to xmltags for plotting using matplot
     rate = []
-    xlabels = ['1M','2M','3M','1YR','2YR','3YR','5YR','7YR','10YR','20YR','30YR']
+    ratetbl=[]
+    xlabels = ['1M','2M','3M','6M','1YR','2YR','3YR','5YR','7YR','10YR','20YR','30YR','10YR-2YR']
+    datelabels=[]
     tag = [1,2,3,4,5,6,7,8,9,10,11,12]
     smoothtag = np.linspace(1,12)
     fig, ax = plt.subplots()
-    ax.set(xlabel='Time to Maturity', ylabel='Interest',title='Yield Curve')
+    ax.set( ylabel='Interest',title='Yield Curve')
     ax.grid
     plt.legend(bbox_to_anchor=(1.05,1),loc=2,borderaxespad=0)
-    plt.xticks(tag,xlabels)
+    plt.xticks([])
 
     #loop through the xml based on name space
     for entry in root.findall('rootns:entry',ns):
         for content in entry.findall('rootns:content',ns):
             for properties in content.findall('properties:properties',ns):
-                #Create key for dictionary
-                ratekey = properties.find('rates:NEW_DATE',ns)
                 #populate lists
                 for child in properties:
                     #Get each individual element
                     if child.tag[55:] == 'NEW_DATE':
                         newdate = child.text[:10]
+                        datelabels.append(child.text[:10])
                     if child.tag[55:] == 'BC_1MONTH':
                         rate.append(float(child.text))
                     if child.tag[55:] == 'BC_2MONTH':
@@ -92,10 +93,19 @@ def parseXML(xmlfile):
                         rate.append(float(child.text))
                     if child.tag[55:] == 'BC_30YEAR':
                         rate.append(float(child.text))
+                        ratetbl.append([r for r in rate])
                         smr = make_interp_spline(tag,rate)
                         rate_smooth = smr(smoothtag)
                         ax.plot(smoothtag,rate_smooth,ms=5,label=newdate)
                         rate.clear()
+
+    #add column to rates that describes 10yr rate minus 2yr rate
+    for r in ratetbl:
+        r.extend([round(r[9]-r[5],2)])
+
+    #create the table with the rate data
+    the_table = plt.table(cellText=ratetbl,rowLabels=datelabels,colLabels=xlabels,loc='bottom')
+    plt.subplots_adjust(left=0.06, bottom=0.5, right=0.97, top=0.96)
     ax.grid()
     ax.legend()
     mng = plt.get_current_fig_manager()

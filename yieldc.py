@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import datetime as dt
 import os
+import tempfile
 from scipy.interpolate import make_interp_spline, BSpline
 
 def loadxml():
@@ -20,14 +21,18 @@ def loadxml():
     # creating HTTP response object from given url
     resp = requests.get(url)
 
+    #Creates a file and returns a tuple containing both the handle and the path
+    fd, path = tempfile.mkstemp()
+    print(fd,path)
     #saving the xml file
-    with open('DailyTreasuryYieldCurveRateData.xml','wb') as f:
+    with open(path,'wb') as f:
         f.write(resp.content)
+    return fd, path
 
-def parseXML(xmlfile):
+def parseXML(fd,path):
 
     # create element tree object
-    tree = ET.parse(xmlfile)
+    tree = ET.parse(fd)
 
     #get root element
     root = tree.getroot()
@@ -38,12 +43,9 @@ def parseXML(xmlfile):
 
     #Delete xml file if it exists
     try:
-        os.remove('~/DailyTreasuryYieldCurveRateData.xml')
+        os.remove(path)
     except OSError:
-        pass
-    try:
-        os.remove('~/Documents/mypython/YieldCurve/DailyTreasuryYieldCurveRateData.xml')
-    except OSError:
+        print('hiterror')
         pass
 
     #Create  values correspond to xmltags for plotting using matplot
@@ -114,10 +116,10 @@ def parseXML(xmlfile):
 
 def main():
     # load xml from web
-    loadxml()
+    fd,path=loadxml()
 
     #parse xml
-    parseXML('DailyTreasuryYieldCurveRateData.xml')
+    parseXML(fd,path)
 
 if __name__ == "__main__":
 

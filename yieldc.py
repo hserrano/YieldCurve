@@ -3,6 +3,7 @@
 #Build Yield curves and display them in matplotlib
 
 import requests
+import sys
 import xml.etree.ElementTree as ET
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,6 +19,7 @@ def loadxml():
 
     # url f xml
     url = 'https://data.treasury.gov/feed.svc/DailyTreasuryYieldCurveRateData?$filter=month(NEW_DATE)%20eq%20'+str(d.month)+'%20and%20year(NEW_DATE)%20eq%20'+str(d.year)
+    #url ='https://data.treasury.gov/feed.svc/DailyTreasuryYieldCurveRateData?$filter=month(NEW_DATE)%20eq%208%20and%20year(NEW_DATE)%20eq%202018'
     # creating HTTP response object from given url
     resp = requests.get(url)
 
@@ -32,7 +34,13 @@ def loadxml():
 def parseXML(fd,path):
 
     # create element tree object
-    tree = ET.parse(fd)
+    try:
+        tree = ET.parse(fd)
+        raise TypeError
+    except TypeError:
+        notify = 'notify-send ["Yield Curve"] "TypeError Occured. Treasury data does not exist. XML file returned blank data."'
+        os.system(notify)
+        sys.exit(0)
 
     #get root element
     root = tree.getroot()
@@ -72,9 +80,15 @@ def parseXML(fd,path):
                         newdate = child.text[:10]
                         datelabels.append(child.text[:10])
                     if child.tag[55:] == 'BC_1MONTH':
-                        rate.append(float(child.text))
+                        if child.text is None :
+                            rate.append(float('0.0'))
+                        else:
+                            rate.append(float(child.text))
                     if child.tag[55:] == 'BC_2MONTH':
-                        rate.append(float(child.text))
+                        if child.text is None:
+                            rate.append(float('0.0'))
+                        else:
+                            rate.append(float(child.text))
                     if child.tag[55:] == 'BC_3MONTH':
                         rate.append(float(child.text))
                     if child.tag[55:] == 'BC_6MONTH':
@@ -92,9 +106,15 @@ def parseXML(fd,path):
                     if child.tag[55:] == 'BC_10YEAR':
                         rate.append(float(child.text))
                     if child.tag[55:] == 'BC_20YEAR':
-                        rate.append(float(child.text))
+                        if child.text is None:
+                            rate.append(float('0.0'))
+                        else:
+                            rate.append(float(child.text))
                     if child.tag[55:] == 'BC_30YEAR':
-                        rate.append(float(child.text))
+                        if child.text is None:
+                            rate.append(float('0.0'))
+                        else:
+                            rate.append(float(child.text))
                         ratetbl.append([r for r in rate])
                         smr = make_interp_spline(tag,rate)
                         rate_smooth = smr(smoothtag)

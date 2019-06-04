@@ -36,7 +36,6 @@ def parseXML(fd,path):
     # create element tree object
     try:
         tree = ET.parse(fd)
-        raise TypeError
     except TypeError:
         notify = 'notify-send ["Yield Curve"] "TypeError Occured. Treasury data does not exist. XML file returned blank data."'
         os.system(notify)
